@@ -1,9 +1,10 @@
 const postcss = require("postcss");
-const pxRegex = require("./lib/pixel-unit-regex");
+const pixelUnitRegex = require("./lib/pixel-unit-regex");
 const filterPropList = require("./lib/filter-prop-list");
 const type = require("./lib/type");
 
 const defaults = {
+  unitToConvert: 'px',
   rootValue: 16,
   unitPrecision: 5,
   selectorBlackList: [],
@@ -27,6 +28,7 @@ module.exports = postcss.plugin("postcss-pxtorem", options => {
   convertLegacyOptions(options);
   const opts = Object.assign({}, defaults, options);
   const satisfyPropList = createPropListMatcher(opts.propList);
+  const pxRegex = pixelUnitRegex(opts.unitToConvert);
 
   return css => {
     const exclude = opts.exclude;
@@ -52,7 +54,7 @@ module.exports = postcss.plugin("postcss-pxtorem", options => {
 
     css.walkDecls((decl, i) => {
       if (
-        decl.value.indexOf("px") === -1 ||
+        decl.value.indexOf(opts.unitToConvert) === -1 ||
         !satisfyPropList(decl.prop) ||
         blacklistedSelector(opts.selectorBlackList, decl.parent.selector)
       )
@@ -72,7 +74,7 @@ module.exports = postcss.plugin("postcss-pxtorem", options => {
 
     if (opts.mediaQuery) {
       css.walkAtRules("media", rule => {
-        if (rule.params.indexOf("px") === -1) return;
+        if (rule.params.indexOf(opts.unitToConvert) === -1) return;
         rule.params = rule.params.replace(pxRegex, pxReplace);
       });
     }
